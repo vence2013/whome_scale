@@ -80,6 +80,14 @@
 // [USART1]$
 
 // $[I2C1]
+// I2C1 SCL on PD00
+#define I2C1_SCL_PORT                            gpioPortD
+#define I2C1_SCL_PIN                             0
+
+// I2C1 SDA on PD01
+#define I2C1_SDA_PORT                            gpioPortD
+#define I2C1_SDA_PIN                             1
+
 // [I2C1]$
 
 // $[PDM]

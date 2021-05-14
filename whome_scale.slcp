@@ -21,6 +21,8 @@ quality: production
 component:
 - {id: mpu}
 - {id: EFR32BG22C224F512GM40}
+- instance: [oled_i2c]
+  id: i2cspm
 - {id: component_catalog}
 - {id: ota_dfu}
 - {id: bootloader_interface}
@@ -38,7 +40,6 @@ other_file:
 tag: ['hardware:rf:band:2400']
 category: Bluetooth Examples
 toolchain_settings: []
-config_file: []
 ui_hints:
   highlight:
   - {path: readme.html, focus: true}
