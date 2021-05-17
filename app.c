@@ -19,6 +19,7 @@
 #include "sl_bluetooth.h"
 #include "gatt_db.h"
 #include "app.h"
+#include "oled_ssd1306.h"
 
 // The advertising set handle allocated from Bluetooth stack.
 static uint8_t advertising_set_handle = 0xff;
@@ -32,6 +33,8 @@ SL_WEAK void app_init(void)
   // Put your additional application init code here!                         //
   // This is called once during start-up.                                    //
   /////////////////////////////////////////////////////////////////////////////
+
+  oled_ssd1306_init();
 }
 
 /**************************************************************************//**
@@ -44,6 +47,8 @@ SL_WEAK void app_process_action(void)
   // This is called infinitely.                                              //
   // Do not call blocking functions from here!                               //
   /////////////////////////////////////////////////////////////////////////////
+
+  oled_test();
 }
 
 /**************************************************************************//**
