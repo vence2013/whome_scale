@@ -5,6 +5,6 @@
 /* - Export Functions ------------------------------------------------------- */
 
 void oled_ssd1306_init( void );
-
+void oled_test( void );
 
 #endif

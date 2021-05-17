@@ -179,6 +179,45 @@ void ssd1306_draw_text2(char x, char y, char* str, char len)
     ssd1306_draw_char2(x + i*16, y, str[i]);
 }
 
+// 用于测试图像显示
+const unsigned char bluetooth_triangle[128] = { /* 0X21,0X01,0X20,0X00,0X20,0X00, */
+    0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
+    0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0XF8,0XFF,0XFF,0X1F,
+    0XFC,0XFF,0XFF,0X3F,0XFC,0XFF,0XFF,0X3F,0XFC,0XFF,0XFF,0X3F,0XF8,0XFF,0XFF,0X1F,
+    0XF0,0XFF,0XFF,0X0F,0XF0,0XFF,0XFF,0X0F,0XE0,0XFF,0XFF,0X07,0XC0,0XFF,0XFF,0X03,
+    0XC0,0XFF,0XFF,0X03,0X80,0XFF,0XFF,0X01,0X00,0XFF,0XFF,0X00,0X00,0XFF,0X7F,0X00,
+    0X00,0XFE,0X7F,0X00,0X00,0XFC,0X3F,0X00,0X00,0XF8,0X1F,0X00,0X00,0XF8,0X1F,0X00,
+    0X00,0XF0,0X0F,0X00,0X00,0XE0,0X07,0X00,0X00,0XE0,0X07,0X00,0X00,0X80,0X01,0X00,
+    0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
+};
+
+const unsigned char bluetooth_icon[128] = { /* 0X21,0X01,0X20,0X00,0X20,0X00, */
+    0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
+    0X00,0XFC,0X3F,0X00,0X80,0XFF,0XFF,0X01,0XE0,0XFF,0XFF,0X0F,0XF8,0XFF,0XFF,0X1F,
+    0XFC,0XFF,0XFF,0X3F,0XFC,0XFB,0XBF,0X7F,0XFE,0XF1,0X1F,0X7F,0XFE,0XE1,0X8F,0X7F,
+    0XFE,0XC3,0XC7,0X7F,0XFF,0X87,0XE3,0XFF,0XFF,0X0F,0XF1,0XFF,0X07,0X00,0X00,0XC0,
+    0X0F,0X00,0X00,0XE0,0X1F,0X1C,0XF8,0XF0,0X3F,0X0E,0XF1,0XF8,0X7F,0X8C,0X63,0XFC,
+    0XFE,0XE0,0X07,0X7E,0XFE,0XF1,0X0F,0X7F,0XFE,0XFB,0X9F,0X7F,0XFC,0XFF,0XFF,0X3F,
+    0XF8,0XFF,0XFF,0X1F,0XF0,0XFF,0XFF,0X0F,0XC0,0XFF,0XFF,0X03,0X00,0XFC,0X3F,0X00,
+    0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,0X00,
+};
+
+void ssd1306_draw_bmp(char x, char y, char w, char h, const unsigned char* bmp)
+{
+  int i, j, p;
+
+  p = h / 8; // 32/8 = 4
+  for (i = 0; i < p; i++)
+  {
+      ssd1306_set_pos(x, y + i);
+      for (j = 0; j < w; j++)
+      {
+          int idx = p*j + i;
+          i2c_data(bmp[idx]);
+      }
+  }
+}
+
 /* 1. 配置驱动的行数
  * 2. 测试打开整个显示屏
  * */
@@ -198,12 +237,47 @@ void cfg_normal( void )
 {
   char para[4];
 
+  // 设置显示起始行（RESET后设置为0）
+  i2c_cmd(0x40, 0, 0);
+  // 设置页寻址模式的页（page）起始地址
+  i2c_cmd(0xb0, 0, 0);
+
+  // 设置COM输出扫描方向
+  i2c_cmd(0xc8, 0, 0);
+  // 设置对赌控制
+  para[0] = 0xff;
+  i2c_cmd(0x81, para, 1);
+  // 设置段（segment）重映射
+  i2c_cmd(0xa1, 0, 0);
+  // 设置正常/翻转显示
+  i2c_cmd(0xa6, 0, 0);
+
   // 设置驱动的路数，0.91寸的显示屏最大好像是32
-  para[0] = 0x20;
-  i2c_cmd(0XA8, para, 1);
+  para[0] = 0x1f;
+  i2c_cmd(0xa8, para, 1);
+  // 设置显示偏移
+  para[0] = 0x00;
+  i2c_cmd(0xd3, para, 1);
+  // 设置显示时钟的分频系数（RESET为1000b）
+  para[0] = 0xf0;
+  i2c_cmd(0xd5, para, 1);
+  // 设置预充（pre-charge）电周期
+  para[0] = 0x22;
+  i2c_cmd(0xd9, para, 1);
+
+  // 设置COM管脚硬件配置
+  para[0] = 0x02;
+  i2c_cmd(0xda, para, 1);
+
+  // 调整VCOMH电压
+  para[0] = 0x49;
+  i2c_cmd(0xdb, para, 10);
+
+  i2c_cmd(0x8d, 0, 0);
+  i2c_cmd(0x14, 0, 0);
 
   // 不管显示内存RAM的内容，直接打开整个显示
-  i2c_cmd(0xA4, 0, 0);
+  //i2c_cmd(0xA4, 0, 0);
 }
 
 void oled_ssd1306_init( void )
@@ -221,5 +295,21 @@ void oled_ssd1306_init( void )
   ssd1306_clear(0x80);
   //ssd1306_draw_char(0, 0, '0');
   ssd1306_draw_text2(0, 0, "74.5kg", 6);
+
+  ssd1306_draw_bmp(16, 0, 32, 32, bluetooth_icon);
 }
 
+void oled_test( void )
+{
+  static int cnt = 0;
+
+  cnt++;
+
+  if (cnt % 100 == 0)
+  {
+      char str[] = "000";
+      int t = (cnt / 100) % 10;
+      str[0] = '0'+t;
+      ssd1306_draw_text2(80, 0, str, 3);
+  }
+}
